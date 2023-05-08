@@ -1,6 +1,7 @@
 package com.jetpack.compose.network
 
 import com.jetpack.compose.BuildConfig
+import com.jetpack.compose.data.DetailResponse
 import com.jetpack.compose.data.PokemonDetailResponse
 import com.jetpack.compose.data.PokemonResponse
 import okhttp3.OkHttpClient
@@ -40,5 +41,8 @@ interface ApiService {
     ) : PokemonResponse
 
     @GET("v2/pokemon-species/{id}")
-    fun getPokemonDetail(@Path("id") id: Int) : PokemonDetailResponse
+    fun getPokemonDetail(@Path("id") id: Int) : Call<PokemonDetailResponse>
+
+    @GET("v2/pokemon/{id}")
+    fun getPokemonMoreDetail(@Path("id") id: Int) : Call<DetailResponse>
 }
