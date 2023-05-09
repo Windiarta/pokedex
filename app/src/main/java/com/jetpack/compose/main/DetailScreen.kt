@@ -1,5 +1,6 @@
 package com.jetpack.compose.main
 
+import android.content.res.Configuration
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,8 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.jetpack.compose.R
@@ -46,6 +50,9 @@ fun DetailScreen(id: Int?, viewModel: MainViewModel, navigateBack: () -> Unit) {
 
 @Composable
 fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val orientation = LocalConfiguration.current.orientation
     val bgColor = when (pokemon.color?.name) {
         "black" -> {
             Black
@@ -81,14 +88,20 @@ fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
             White
         }
     }
+    val isPhoneScreen : Boolean =
+        (orientation == Configuration.ORIENTATION_PORTRAIT  && screenWidthDp < 600) || (orientation == Configuration.ORIENTATION_LANDSCAPE && screenHeightDp < 600)
+
+    val maxScreenHeight = if(orientation == Configuration.ORIENTATION_LANDSCAPE) screenHeightDp*8/5 else { if(isPhoneScreen)screenHeightDp*9/10 else screenHeightDp }
+
     LazyColumn {
         item {
             Box(
                 modifier = Modifier
                     .background(bgColor)
                     .fillMaxWidth()
-                    .height(1260.dp)
+                    .height(maxScreenHeight.dp)
             ) {
+                // Background
                 Image(
                     painter = painterResource(id = R.drawable.pokeball_silhuette),
                     contentDescription = null,
@@ -96,16 +109,19 @@ fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
                         .size(700.dp)
                         .offset(180.dp, 160.dp)
                 )
+
+                // Card View
                 Card(
                     shape = RoundedCornerShape(50.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .offset(y = 600.dp)
-                        .height(800.dp)
+                        .offset(y = if(isPhoneScreen) 330.dp else 550.dp)
+                        .height(if (isPhoneScreen) 500.dp else 800.dp)
                 ) {
                     LazyColumn(
                         modifier = Modifier
-                            .padding(top = 100.dp, start = 30.dp, end = 30.dp, bottom = 150.dp)
+                            .padding(top = 80.dp, start = 30.dp, end = 30.dp,
+                                bottom = if(orientation == Configuration.ORIENTATION_LANDSCAPE) 200.dp else 100.dp)
                     ) {
                         // Basic Information
                         item {
@@ -141,9 +157,7 @@ fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
                         items(count = 6) {
                             Text(
                                 text = "${detail.stats?.get(it)?.stat?.name!!.capitalize(Locale.ROOT)}: ${
-                                    detail.stats.get(
-                                        it
-                                    )?.base_stat.toString()
+                                    detail.stats[it]?.base_stat.toString()
                                 }", style = Typography.h5
                             )
                         }
@@ -175,18 +189,24 @@ fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
                     }
                 }
 
+                // Pokemon Image
+                val imageTopPadding: Dp = if (isPhoneScreen) 120.dp else 150.dp
+                val imageSize : Dp = if(isPhoneScreen) 400.dp else 620.dp
                 AsyncImage(
                     model = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.id}.png",
                     contentDescription = pokemon.name,
                     modifier = Modifier
-                        .height(700.dp)
+                        .height(imageSize)
                         .fillMaxWidth()
-                        .padding(top = 150.dp)
+                        .padding(top = imageTopPadding)
                 )
+
+                // Elements
+                val typeTopPadding: Dp = if (isPhoneScreen) 80.dp else 120.dp
                 LazyRow (
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier
-                        .padding(start = 100.dp, top = 120.dp)
+                        .padding(start = 90.dp, top = typeTopPadding)
                 ){
                     val types = detail.types ?: emptyList()
                     items(types.size) { index ->
@@ -216,7 +236,7 @@ fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
                             shape = Shapes.medium,
                             border = BorderStroke(2.dp, color = Black),
                             modifier = Modifier
-                                .width(170.dp)
+                                .width(120.dp)
                                 .height(35.dp)
                         ) {
                             Text(
@@ -234,6 +254,15 @@ fun DesignPokemon(pokemon: PokemonDetailResponse, detail : DetailResponse) {
 
 @Composable
 fun TopBar(navigateBack: () -> Unit, pokemon: DetailResponse) {
+    val screenWidthDp = LocalConfiguration.current.screenWidthDp
+    val screenHeightDp = LocalConfiguration.current.screenHeightDp
+    val orientation = LocalConfiguration.current.orientation
+
+    val isPhoneScreen : Boolean =
+        (orientation == Configuration.ORIENTATION_PORTRAIT  && screenWidthDp < 600) || (orientation == Configuration.ORIENTATION_LANDSCAPE && screenHeightDp < 600)
+
+    val typography: TextStyle = if (isPhoneScreen){ Typography.h3 } else { Typography.h2 }
+
     Row (
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start,
@@ -247,21 +276,22 @@ fun TopBar(navigateBack: () -> Unit, pokemon: DetailResponse) {
                 contentDescription = "Back",
                 tint = Color.Black,
                 modifier = Modifier
-                    .size(70.dp)
+                    .size(50.dp)
             )
         }
         Text(
             text = pokemon.name!!.capitalize(Locale.ROOT),
-            style = Typography.h2,
+            style = typography,
             textAlign = TextAlign.Start,
             color = Color.Black,
             modifier = Modifier
                 .weight(1F)
                 .fillMaxWidth()
+                .padding(start = 20.dp)
         )
         Text(
             text = "#${"%04d".format(pokemon.id)}",
-            style = Typography.h4,
+            style = typography,
             color = Color.Black,
             textAlign = TextAlign.End,
         )

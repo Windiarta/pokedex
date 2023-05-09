@@ -1,5 +1,6 @@
 package com.jetpack.compose.main
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,28 +55,47 @@ fun AboutScreen(navigateBack: () -> Unit) {
             }
         }
         item {
-            Row (Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically){
-                Image(
-                    painter = painterResource(
-                        id = R.drawable.developer
-                    ),
-                    contentDescription = "developer_photo",
-                    alignment = Alignment.Center,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .width(250.dp)
-                        .fillMaxHeight()
-                )
-                Column (Modifier.padding(start = 20.dp, end = 20.dp)){
-                    Text(text = "Windiarta", style = Typography.h2)
-                    Divider()
-                    Text(text = "a181dsx3462@bangkit.academy", style = Typography.h5)
-                    Divider()
-                    Text(text = "https://github.com/Windiarta", style = Typography.h5)
+            if(LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                Row (Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically){
+                    ProfilePicture()
+                    Profile()
+                }
+            } else {
+                Column(Modifier.padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    ProfilePicture()
+                    Profile()
                 }
             }
 
+
         }
+    }
+}
+
+@Composable
+fun ProfilePicture() {
+    Image(
+        painter = painterResource(
+            id = R.drawable.developer
+        ),
+        contentDescription = "developer_photo",
+        alignment = Alignment.Center,
+        contentScale = ContentScale.Crop,
+        modifier = Modifier
+            .clip(CircleShape)
+            .width(250.dp)
+            .height(250.dp)
+            .fillMaxHeight()
+    )
+}
+
+@Composable
+fun Profile(){
+    Column (Modifier.padding(start = 20.dp, end = 20.dp)){
+        Text(text = "Windiarta", style = Typography.h2)
+        Divider()
+        Text(text = "a181dsx3462@bangkit.academy", style = Typography.h5)
+        Divider()
+        Text(text = "https://github.com/Windiarta", style = Typography.h5)
     }
 }
